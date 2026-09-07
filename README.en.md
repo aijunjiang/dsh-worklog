@@ -1,5 +1,7 @@
 # dsh-worklog · DSH Worklog Calendar
 
+> **English · [简体中文](./README.md)**
+
 Automatically turns all your DSH chats (across workspaces, SSH routes, and finished sessions) into a **work log**:
 
 - Sliced by **conversation node** — each "user message → model completes" turn is one node with its own summary;
