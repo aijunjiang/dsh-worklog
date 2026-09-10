@@ -1,6 +1,11 @@
 # dsh-worklog — bundle patch layer.
 #
-# 宿主 row 放在 profile 的 cordis.patch.yml（insert）里，此处不再插入 row 以
-# 避免重复。本包进入 dsh.profile.bundles 列表，使 clientModules 在 web 启动时
-# 扫描到 dsh.client 元数据并注册「工作台」client 模块（lib/client.js）。
-[]
+# 宿主 row 在此处 insert：`dsh plugin add` 后自动挂载，无需用户手动改 profile
+# 的 cordis.patch.yml。所有 config 键都有默认值（见 src/config.js），零 config
+# 即可启动；要调时区/扫描间隔等再在 profile 的 cordis.patch.yml 覆盖同名 id。
+#
+# 本包进入 dsh.profile.bundles 列表后，clientModules 在 web 启动时扫描 dsh.client
+# 元数据并注册「工作台」client 模块（lib/client.js）。
+- insert:
+    - id: worklog
+      name: dsh-worklog

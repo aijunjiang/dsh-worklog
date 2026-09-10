@@ -29,7 +29,7 @@ dsh plugin --profile web add github:aijunjiang/dsh-worklog
 pnpm dsh web   # 重启一次即可，无需其它参数
 ```
 
-> 安装后重启一次 dsh web：宿主插件（扫描/摘要/工具）与「工作台」client 模块都会在启动时自动注册。
+> 安装后重启一次 dsh web：宿主插件（扫描/摘要/工具）与「工作台」client 模块都会在启动时自动注册——`bundle.gui.patch.yml` 已内置 `insert id: worklog`，无需手动改 profile。
 > 卸载：`dsh plugin --profile web remove dsh-worklog`。
 
 ## 使用
@@ -54,9 +54,20 @@ pnpm dsh web   # 重启一次即可，无需其它参数
 | 摘要 Prompt | 内置 | 可自定义，界面展示默认结构 |
 | 主动模式 | 开 | 每个有新活动的日期即时补摘要 |
 
-### 行级配置（profile `cordis.patch.yml` / bundle patch）
+### 行级配置（profile `cordis.patch.yml`）
 
-见 `bundle.gui.patch.yml`：时区偏移、扫描间隔、静默阈值、输出上限、摘要并发等。
+宿主 row 已由 bundle patch 自动 insert（零 config 走默认值）。要覆盖默认值（时区偏移、扫描间隔、
+静默阈值、输出上限、摘要并发等），在 profile 的 `cordis.patch.yml` 里按 id 覆盖：
+
+```yaml
+- id: worklog
+  config:
+    timezoneOffsetMinutes: 480   # 时区偏移（分钟），默认 480（UTC+8）
+    scanIntervalMs: 300000       # 语料扫描间隔（毫秒）
+    autoSummarize: true          # 会话结束后自动 LLM 摘要
+```
+
+全部可用键与默认值见 `src/config.js`。
 
 ## 数据与缓存
 
