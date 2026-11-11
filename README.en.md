@@ -38,11 +38,19 @@ pnpm dsh web   # restart once; no other flags
 2. **View a day**: click a date to see that day's items (collapsed by default; "Expand N nodes" shows node-level summaries); click two dates to select a range.
 3. **Generate report**: pick a range → "全选/全不选" or check items → choose kind (daily/weekly/monthly/half-year) → "生成报告".
 4. **Summarize**: click "生成摘要（节点切片）" after selecting a date to recompute.
-5. **Settings**: Settings → Plugins → Plugin configuration → "工作日志" for model/prompt/proactive.
+5. **Settings**: sidebar **Plugins** → click `dsh-worklog` under Installed → the configuration block on the bundle page, for model/prompt/proactive.
 
 ## Configuration
 
-### Summary settings (Settings → Plugins → 工作日志)
+### All settings (Plugins view → dsh-worklog)
+
+> **Since DSH 0.2.x** every option lives on ONE form (entry id `worklog`). The two
+> tables below used to be separate surfaces -- a settings card and the row config
+> -- but 0.2.x derives exactly one form per entry, so the summary fields moved
+> into the row config. The two sets never overlapped, so merging them leaves
+> existing values untouched.
+
+#### Summary
 
 | Field | Default | Meaning |
 |---|---|---|
