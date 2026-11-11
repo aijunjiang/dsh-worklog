@@ -1,6 +1,6 @@
 {
   "name": "dsh-worklog",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "DSH 工作日志日历：全量汇总所有会话，按天登记工作时长与内容摘要，支持生成日报/周报/半年总结（Host 核心）。",
   "type": "module",
   "main": "./src/index.js",
