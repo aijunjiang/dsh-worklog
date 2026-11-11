@@ -20,19 +20,17 @@ import { writeFileSync } from 'node:fs'
 import z from '@deepseek-ai/schemastery'
 
 /** 设置命名空间（Web「设置 → 插件」卡片按此 key 配对）。 */
-export const SETTINGS_NS = 'dsh-worklog'
+// The settings namespace is the Loader ENTRY id from bundle.gui.patch.yml
+// (`- id: worklog`), NOT the package name. The two are deliberately different
+// and confusing them is silent: describe() simply finds no such namespace and
+// the card reads nothing. The Plugins-page slot is keyed by the PACKAGE name,
+// so both spellings appear in this plugin — each in its own place.
+export const SETTINGS_NS = 'worklog'
 
 /** 设置 schema：独立 LLM 配置（接口格式/baseUrl/apiKey/model/上下文）+ 摘要 prompt + 主动模式。 */
-const SettingsSchema = z.object({
-  apiFormat: z.string().default('dsh'),   // 'dsh' | 'openai' | 'anthropic'
-  baseUrl: z.string().default(''),
-  apiKey: z.string().role('secret').default(''),
-  apiKeyEnv: z.string().default('GJSL_API_KEY'),
-  modelName: z.string().default(''),
-  context: z.number().step(1).min(0).default(0),
-  prompt: z.string().default(''),
-  proactive: z.boolean().default(true),
-})
+// DSH 0.2.x: no runtime-installed schema any more — these knobs are part of
+// the entry's Config now (see config.js), so the form the settings package
+// derives IS this plugin's card.
 
 const settingsDefaults = { apiFormat: 'dsh', baseUrl: '', apiKey: '', apiKeyEnv: 'GJSL_API_KEY', modelName: '', context: 0, prompt: '', proactive: true }
 
@@ -94,23 +92,30 @@ export function apply(ctx, config) {
   const store = createStore(cfg.baseDir)
   console.log(`[dsh-worklog] store: ${store.file} · autoSummarize=${cfg.autoSummarize} · scan=${cfg.scanIntervalMs}ms`)
 
-  // 设置（模型/prompt/主动开关）：deferred 注册，供 Web 设置卡片 + 摘要管线读取
-  let currentSettings = () => settingsDefaults
-  if (ctx.inject) {
+  // 设置（模型/prompt/主动开关）：供 Web 设置卡片 + 摘要管线读取。
+  //
+  // DSH 0.2.x: ctx.settings.installSection is gone. A plugin's settings are now
+  // its Config schema, projected into a form by the settings package and keyed
+  // by the Loader entry id — there is nothing to install. `SettingsSchema` and
+  // `settingsDefaults` therefore become the source values directly, and the
+  // Web card reads/writes them through the same RPC it always used.
+  //
+  // The card and the summary pipeline both need the LIVE values, so read them
+  // back from the settings service (describe() projects every namespace) with
+  // the schema defaults as the fallback for a deployment without settings.
+  const settingsOf = () => {
     try {
-      ctx.inject(['settings'], (settingsCtx) => {
-        settingsCtx.settings.installSection(ctx, SETTINGS_NS, SettingsSchema, settingsDefaults, {
-          setSource(source) {
-            currentSettings = () => withSettingsDefaults(source())
-          },
-          onChange() {
-            // 设置变化后套用新模型/prompt；稍后重扫补摘要
-            setTimeout(() => { try { scanNow() } catch { /* ignore */ } }, 500)
-          },
-        })
-      })
-    } catch { /* 无 settings 服务时仅使用行配置 */ }
+      const service = ctx.get && ctx.get('settings')
+      if (service && typeof service.describe === 'function') {
+        const found = service.describe().find(entry => String(entry.ns) === SETTINGS_NS)
+        if (found && found.value && typeof found.value === 'object') {
+          return withSettingsDefaults(found.value)
+        }
+      }
+    } catch { /* 无 settings 服务时用默认值 */ }
+    return settingsDefaults
   }
+  let currentSettings = () => settingsOf()
   const connAtStart = (ctx.get && ctx.get('connection')) || null
   store.setMeta({
     bootDiag: {

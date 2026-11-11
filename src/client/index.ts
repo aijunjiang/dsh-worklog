@@ -82,9 +82,13 @@ export function apply(ctx: any): void {
     },
     WorklogRoot,
   ))
-  ctx.slots.inject('settings.plugin.item', () => ctx.slots.register(
+  // DSH 0.2.x: `settings.plugin.item` was removed. A bundle's configuration is
+  // now hosted on its own Plugins page under `plugins.bundle.config`, keyed by
+  // PACKAGE NAME — while the form it writes to stays the Loader entry id, which
+  // is the asymmetry that makes this look like it should not work.
+  ctx.slots.inject('plugins.bundle.config', () => ctx.slots.register(
     {
-      name: 'settings.plugin.item',
+      name: 'plugins.bundle.config',
       key: 'dsh-worklog',
       inject: () => ({ rpc: makeRpc(ctx) }),
     },
