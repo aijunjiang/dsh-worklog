@@ -208,11 +208,32 @@ export function apply(ctx, config) {
       ).catch(() => [])
     },
   }
+  // The GUI channel must WAIT for its transport.
+  //
+  // `webServer` and `connection` are mounted by rows that start after this one,
+  // so reading them straight from `apply` sees neither and the channel registers
+  // nothing — the browser then reaches `/dsh-worklog/settings.get` with no
+  // handler and gets HTTP 405. `ctx.inject` runs the callback once the service
+  // actually exists, which is the whole point of the seam.
   let disposeChannel = null
-  try {
-    disposeChannel = registerWorklogChannel(ctx, channelDeps)
-  } catch (e) {
-    diagFile(cfg.baseDir, { channelThrew: String((e && e.message) || e) })
+  if (typeof ctx.inject === 'function') {
+    try {
+      ctx.inject(['webServer'], (child) => {
+        try {
+          disposeChannel = registerWorklogChannel(child, channelDeps)
+        } catch (e) {
+          diagFile(cfg.baseDir, { channelThrew: String((e && e.message) || e) })
+        }
+      })
+    } catch (e) {
+      diagFile(cfg.baseDir, { channelInjectThrew: String((e && e.message) || e) })
+    }
+  } else {
+    try {
+      disposeChannel = registerWorklogChannel(ctx, channelDeps)
+    } catch (e) {
+      diagFile(cfg.baseDir, { channelThrew: String((e && e.message) || e) })
+    }
   }
 
   // 周期扫描。timer 服务以 ctx 混入形式提供 interval/timeout。
